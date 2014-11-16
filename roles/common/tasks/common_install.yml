@@ -1,0 +1,32 @@
+---
+# TODO: This has some hardcoding need to cleanup.
+# Does basic installation of common swift packages installation/configuration  
+# and some other common configuration.
+#
+- name: install libselinux-python 
+  yum: pkg=libselinux-python state=installed
+
+- name: install RDO openstack repository
+  command: yum install -y http://rdo.fedorapeople.org/rdo-release.rpm creates=/etc/yum.repos.d/rdo-release.repo
+
+- name: install EPEL repository
+  #command: yum install -y http://fedora.mirror.nexicom.net/epel/6/i386/epel-release-6-8.noarch.rpm creates=/etc/yum.repos.d/epel.repo
+  command: yum install -y http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm creates=/etc/yum.repos.d/epel.repo
+
+- name: installing swift common packages
+  yum: pkg={{ item }} state=installed
+  with_items:  redhat_packages_common
+
+- name: add user for swift
+  user: name=swift groups=swift comment="Swift user"
+
+- name: create /etc/swift, /var/run/swift etc directory
+  file: path={{item}} owner=swift group=swift mode=0755 state=directory
+  with_items:
+    - /etc/swift
+    - /var/run/swift
+    - /var/cache/swift
+
+
+- name: copy /etc/swift/swift.conf
+  template: src=swift.conf.j2 dest=/etc/swift/swift.conf owner=swift group=swift mode=0600

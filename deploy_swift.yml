@@ -1,0 +1,43 @@
+---
+# In case of vagrant setup do vagrant up to ensure VMs are running
+- name: a play that runs entirely on the ansible host
+  hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: vagrant up cluster vm 
+      command: vagrant up
+      when: target_env=='vagrant'
+      tags: vagrant_up
+
+# Need to preload fact for storage nodes as its needed for proxy config
+- name: preload swift store nodes facts
+  hosts: swift_store
+  user: root
+  sudo: yes
+
+# Deploy proxy nodes as well as create swift rings. 
+- name: deploy and configure swift cluster proxy naodes
+  hosts: swift_proxy
+  user: root
+  sudo: yes
+  roles:
+    - common
+    - deploy-swift-proxy
+
+# Deploy and configure storage node software and also prepare disk if needed
+- name: deploy and configure swift cluster storage nodes
+  hosts: swift_store
+  user: root
+  sudo: yes
+  roles:
+    - common
+    - deploy-swift-storage
+
+
+# Run basic tests on proxy nodes. Like upload and verify objects
+- name: test deployed swift cluster
+  hosts: swift_proxy
+  user: root
+  sudo: yes
+  tasks: 
+    - include: tests/basic.yml

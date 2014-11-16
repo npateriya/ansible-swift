@@ -1,0 +1,12 @@
+# Tasks copies ring from local folder to target host. 
+# Copy of ring from one of proxy host to local host is done as part of proxy deployment 
+# and ring creation process.
+
+- name: Copy ring from local folder to /etc/swift on target
+  copy: src="local_rings/{{item}}.ring.gz" dest="/etc/swift/{{item}}.ring.gz" mode=0750 owner=swift group=swift
+  with_items:
+    - account
+    - container
+    - object
+  tags:
+    - ring_copy

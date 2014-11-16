@@ -1,0 +1,93 @@
+---
+# Below tasks creates rings, its is based on ansible inventory and disks mentioned in group_vars
+# Once rings are created these are copied to local host so they can be distributed. 
+
+- name: Create directory for ring-builder files
+  file: path={{swift_ring_builder_satgedir}} mode=0755 state=directory
+  tags:
+    - ring_builder
+   
+- name: Create ring builder for account, container and object 
+  command: chdir={{swift_ring_builder_satgedir}} swift-ring-builder {{item}}.builder create {{swift_part_power}} {{swift_replicas}} {{swift_min_part_hours}}
+  args: 
+    chdir: "{{swift_ring_builder_satgedir}}"
+  when: swift_ring_builder is defined and swift_ring_builder== 'true'
+  with_items:
+    - account
+    - container
+    - object
+  tags:
+    - ring_builder
+
+- name: Add devices to swift account rings 
+  command: swift-ring-builder account.builder add --region 1 --zone {{hostvars[item[0]].swift_zone}} --ip {{hostvars[item[0]]['ansible_eth1'].ipv4.address}} --port {{swift_account_port}} --device {{item[1]}}1 --weight 100 
+  args: 
+    chdir: "{{swift_ring_builder_satgedir}}"
+  when: swift_ring_builder is defined and swift_ring_builder== 'true'
+  with_nested: 
+    - groups.swift_store
+    - swift_storage_disks
+  ignore_errors: true
+  tags:
+    - ring_builder
+
+
+- name: Add devices to swift container rings
+  command: swift-ring-builder container.builder add --region 1 --zone {{hostvars[item[0]].swift_zone}} --ip {{hostvars[item[0]]['ansible_eth1'].ipv4.address}} --port {{swift_container_port}} --device {{item[1]}}1 --weight 100
+  args: 
+    chdir: "{{swift_ring_builder_satgedir}}"
+  when: swift_ring_builder is defined and swift_ring_builder == 'true'
+  with_nested:
+    - groups.swift_store
+    - swift_storage_disks
+  ignore_errors: true
+  tags:
+    - ring_builder
+
+- name: Add devices to swift object rings
+  command: swift-ring-builder object.builder add --region 1 --zone {{hostvars[item[0]].swift_zone}} --ip {{hostvars[item[0]]['ansible_eth1'].ipv4.address}} --port {{swift_object_port}} --device {{item[1]}}1 --weight 100
+  args: 
+    chdir: "{{swift_ring_builder_satgedir}}"
+  when: swift_ring_builder is defined and swift_ring_builder == 'true'
+  with_nested:
+    - groups.swift_store
+    - swift_storage_disks
+  ignore_errors: true
+  tags:
+    - ring_builder
+
+
+- name: Verify ring builder for account, container and object
+  command: swift-ring-builder {{item}}.builder
+  args:
+    chdir: "{{swift_ring_builder_satgedir}}"
+  when: swift_ring_builder is defined and swift_ring_builder== 'true'
+  with_items:
+    - account
+    - container
+    - object
+  tags:
+    - ring_builder
+
+
+- name: rebalance ring builder for account, container and object
+  command:  swift-ring-builder {{item}}.builder  rebalance
+  args:
+    chdir: "{{swift_ring_builder_satgedir}}"
+  when: swift_ring_builder is defined and swift_ring_builder== 'true'
+  with_items:
+    - account
+    - container
+    - object
+  tags:
+    - ring_builder
+
+- name: ring build done. Copy ring locally
+  fetch: src="{{swift_ring_builder_satgedir}}/{{item}}.ring.gz" dest="local_rings/{{item}}.ring.gz" flat=yes
+  when: swift_ring_builder is defined and swift_ring_builder== 'true'
+  with_items:
+    - account
+    - container
+    - object
+  tags:
+    - ring_builder_copy

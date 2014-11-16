@@ -1,0 +1,12 @@
+---
+- include: install_proxy.yml
+- include: ring_builder.yml 
+- include: ../../common/tasks/ring_copy.yaml
+
+- name: start memcached service (#TODO need to change to service from command)
+  command: service memcached start
+
+- name: start proxy services (#TODO need to change to service from command)
+  command: swift-init {{item}} start
+  with_items:
+    - proxy-server

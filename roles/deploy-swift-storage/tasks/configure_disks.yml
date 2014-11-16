@@ -1,0 +1,49 @@
+---
+- name: create /srv/node base
+  file:  path=/srv/node owner=swift group=swift mode=0755 state=directory
+  tags: storage_disk_prep
+
+- name: check that disk not already formated/partitioned, no further action taken if already partitioned
+  shell: fdisk -l | grep -c '/dev/{{item}}1'  
+  register: disk_status
+  with_items: swift_storage_disks
+  tags: storage_disk_prep
+  ignore_errors: true
+
+- name: format disk {{item.item}}
+  shell: echo -e "n\np\n1\n\n\nw" | fdisk /dev/{{item.item}} 
+  with_items: disk_status.results
+  when: item.rc != 0 
+  tags: storage_disk_prep
+
+- name: create fs, run mkfs on {{item.item}}
+  command: mkfs.xfs -f -i size=512 /dev/{{item.item}}1
+  with_items: disk_status.results
+  when: item.rc != 0 
+  tags: storage_disk_prep
+
+- name: update fstab
+  lineinfile: line="/dev/{{item.item}}1 /srv/node/{{item.item}}1 xfs noatime,nodiratime,nobarrier,logbufs=8 0 0" dest=/etc/fstab
+  with_items: disk_status.results
+  when: item.rc != 0 
+  tags: storage_disk_prep
+
+- name: make directory for mounting partition, /srv/node/{{item.item}}1
+  file: path=/srv/node/{{item.item}}1 owner=swift group=swift mode=0755 state=directory
+  with_items: disk_status.results
+  when: item.rc != 0 
+  tags: storage_disk_prep
+
+- name: mounting partition, /srv/node/{{item.item}}1
+  command: mount /srv/node/{{item.item}}1
+  with_items: disk_status.results
+  when: item.rc != 0 
+  tags: storage_disk_prep
+
+- name: change owner to swift:swift, /srv/node/{{item.item}}1
+  command: chown -R swift:swift /srv/node/{{item.item}}1
+  with_items: disk_status.results
+  #when: item.rc != 0 
+  tags: storage_disk_prep
+
+

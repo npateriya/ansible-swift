@@ -1,0 +1,23 @@
+---
+- include: install_storage.yml
+- include: ../../common/tasks/ring_copy.yaml
+- include: configure_disks.yml
+- include: configure_rsync.yml 
+
+- name: start storage services(#TODO need to change to service from command)
+  command: swift-init start {{item}}
+  with_items:
+    - account-server
+    - account-auditor
+    - account-reaper
+    - account-replicator
+    - container-server
+    - container-auditor
+    - container-replicator
+    - container-updater
+    - container-sync
+    - object-server
+    - object-auditor
+    - object-replicator
+    - object-updater
+  tags: swift-storage-service-start

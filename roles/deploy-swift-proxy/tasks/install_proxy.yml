@@ -1,0 +1,10 @@
+---
+# Install and configure proxy related packages
+
+- name: install swift proxy packages
+  yum: pkg={{ item }} state=installed
+  with_items:  redhat_packages_proxy
+
+- name: copy proxy-server.conf
+  template: src=proxy-server.conf.j2 dest=/etc/swift/proxy-server.conf owner=swift group=swift mode=0640
+

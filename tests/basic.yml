@@ -1,0 +1,36 @@
+---
+- name: Ensure swift stat works
+  command: swift -A http://{{ansible_eth1.ipv4.address}}:8080/auth/v1.0 -U system:root -K testpass stat
+  tags: swift-test
+
+- name: Create data file
+  lineinfile: dest=/tmp/data create=yes line="success"
+  tags: swift-test
+
+- name: Ensure upload object works
+  command: swift -A http://{{ansible_eth1.ipv4.address}}:8080/auth/v1.0 -U system:root -K testpass upload {{ansible_hostname}}.data  data
+  args:
+     chdir: /tmp
+  tags: swift-test
+
+- name: Delete data file before download
+  file: dest=/tmp/data  state=absent
+  tags: swift-test
+
+
+- name: Ensure downlod of file works
+  command: swift -A http://{{ansible_eth1.ipv4.address}}:8080/auth/v1.0 -U system:root -K testpass download  {{ansible_hostname}}.data  data
+  args:
+     chdir: /tmp
+  tags: swift-test
+
+- name: Ensure list show container
+  shell: swift -A http://{{ansible_eth1.ipv4.address}}:8080/auth/v1.0 -U system:root -K testpass list | grep -c {{ansible_hostname}}.data
+  tags: swift-test
+
+- name: Ensure data retreived is good
+  command: grep -c "success" /tmp/data
+  tags: swift-test
+
+ 
+

@@ -1,0 +1,9 @@
+---
+- name: copy rsync init scrit
+  copy: src=rsync.init dest=/etc/init.d/rsync owner=root group=root mode=0755
+
+- name: copy rsync conf template
+  template: src=rsyncd.conf.j2 dest=/etc/rsyncd.conf owner=root group=root mode=0640
+
+- name: start rsync daemon
+  command: service rsync start

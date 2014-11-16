@@ -1,0 +1,40 @@
+---
+# file: vagrant.yml
+# VM config file for the Vagrant development environment
+
+hosts:
+    proxy-1:
+      private_ip: 192.168.58.21
+      memory: 512
+      forwarded-ssh-port: 3301
+      role: proxy
+    proxy-2:
+      private_ip: 192.168.58.22
+      memory: 512
+      forwarded-ssh-port: 3302
+      role: proxy
+    store-1:
+      private_ip: 192.168.58.31
+      memory: 512
+      forwarded-ssh-port: 3303
+      role: storage
+    store-2:
+      private_ip: 192.168.58.32
+      memory: 512
+      forwarded-ssh-port: 3304
+      role: storage
+    store-3:
+      private_ip: 192.168.58.33
+      memory: 512
+      forwarded-ssh-port: 3305
+      role: storage
+    store-4:
+      private_ip: 192.168.58.34
+      memory: 512
+      forwarded-ssh-port: 3306
+      role: storage
+
+box_name: opscode-centos-6.5
+box_url: http://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbox/opscode_centos-6.5_chef-provisionerless.box
+
+

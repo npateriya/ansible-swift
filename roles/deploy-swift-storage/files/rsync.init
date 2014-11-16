@@ -1,0 +1,42 @@
+#! /bin/sh
+#
+# chkconfig:   2345 50 50
+# description: The rsync daemon
+
+# source function library
+ . /etc/rc.d/init.d/functions
+
+PROG='/usr/bin/rsync'
+BASE=${0##*/}
+
+#  pid file = /var/run/<filename>.pid
+OPTIONS="--daemon --config=/etc/rsyncd.conf"
+
+case "$1" in
+  start)
+    echo -n $"Starting $BASE: "
+    daemon --check $BASE $PROG $OPTIONS
+    echo
+    ;;
+  stop)
+    echo -n $"Shutting down $BASE: "
+    killall $BASE
+    echo
+    ;;
+  status)
+    status $BASE
+    echo
+    ;;
+  restart|force-reload)
+    $0 stop
+    sleep 1
+    $0 start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|status|restart|force-reload}" >&2
+    exit 1
+    ;;
+esac
+
+exit 0
+

@@ -1,0 +1,30 @@
+---
+redhat_packages_common:
+   - openstack-swift
+   - python-swiftclient
+   - rsync
+redhat_packages_proxy:
+   - openstack-swift-proxy
+   - memcached
+redhat_packages_storage:
+   - openstack-swift-account
+   - openstack-swift-container
+   - openstack-swift-object
+   - xfsprogs
+   - parted
+# random unique strings that can never change (DO NOT LOSE)
+# generate usng>> od -t x8 -N 8 -A n </dev/random
+swift_hash_path_prefix: 3f30fa23baa43d4e
+swift_hash_path_suffix: 94f0f2973b94ef78
+# based on 6 storage with 8 disks, 100 parts per disk
+swift_part_power: 12
+swift_replicas: 3
+swift_min_part_hours: 1
+swift_ring_builder_satgedir: /etc/swift_ring_stage
+swift_storage_disks:
+ - sdb
+ - sdc
+ - sdd
+swift_account_port: 6002
+swift_container_port: 6001
+swift_object_port: 6000
